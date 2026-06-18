@@ -7,6 +7,15 @@ import { users } from "~/server/db/schema";
 import { stripe } from "~/server/stripe";
 import { env } from "~/env";
 
+// Safely parses a Stripe Unix timestamp into a valid JavaScript Date, or returns null if invalid
+function parseStripeDate(timestamp: any): Date | null {
+  if (!timestamp) return null;
+  const num = Number(timestamp);
+  if (isNaN(num)) return null;
+  const date = new Date(num * 1000);
+  return isNaN(date.getTime()) ? null : date;
+}
+
 export async function POST(req: Request) {
   const WEBHOOK_SECRET = env.STRIPE_WEBHOOK_SECRET;
 
@@ -53,7 +62,7 @@ export async function POST(req: Request) {
       // Fetch latest subscription info from Stripe
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       const priceId = (subscription as any).items.data[0]?.price.id;
-      const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000);
+      const currentPeriodEnd = parseStripeDate((subscription as any).current_period_end);
 
       // Find user by Clerk ID first (passed via checkout metadata), otherwise fallback to customer ID
       if (clerkUserId) {
@@ -83,7 +92,7 @@ export async function POST(req: Request) {
       const subscription = event.data.object as any;
       const customerId = subscription.customer as string;
       const priceId = subscription.items.data[0]?.price.id;
-      const currentPeriodEnd = new Date(subscription.current_period_end * 1000);
+      const currentPeriodEnd = parseStripeDate(subscription.current_period_end);
 
       await db
         .update(users)
