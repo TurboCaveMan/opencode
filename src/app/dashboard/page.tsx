@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { UserButton, useUser } from "@clerk/nextjs";
 import { useState } from "react";
+import { env } from "~/env";
 
 import { api } from "~/trpc/react";
 import { PostManager } from "~/app/_components/post";
@@ -44,8 +45,9 @@ export default function DashboardPage() {
   const handleUpgrade = async () => {
     setStripeLoading(true);
     setErrorMsg("");
-    // Use test Stripe Price ID. In production, this would be an env variable or config.
-    createCheckout.mutate({ priceId: "price_1Otest_your_stripe_price_id_here" });
+    // Use centrally configured Stripe Price ID from env, falling back to dummy default
+    const priceId = env.NEXT_PUBLIC_STRIPE_PRO_PRICE_ID ?? "price_1Otest_your_stripe_price_id_here";
+    createCheckout.mutate({ priceId });
   };
 
   const handleManageBilling = async () => {
