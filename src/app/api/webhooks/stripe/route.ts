@@ -62,7 +62,17 @@ export async function POST(req: Request) {
       // Fetch latest subscription info from Stripe
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       const priceId = (subscription as any).items.data[0]?.price.id;
-      const currentPeriodEnd = parseStripeDate((subscription as any).current_period_end);
+      const rawCurrentPeriodEnd = (subscription as any).current_period_end;
+      const currentPeriodEnd = parseStripeDate(rawCurrentPeriodEnd);
+
+      console.log(`[Stripe Webhook] Processing checkout.session.completed:`, {
+        clerkUserId,
+        customerId,
+        subscriptionId,
+        priceId,
+        rawCurrentPeriodEnd,
+        parsedDate: currentPeriodEnd ? currentPeriodEnd.toISOString() : null,
+      });
 
       // Find user by Clerk ID first (passed via checkout metadata), otherwise fallback to customer ID
       if (clerkUserId) {
@@ -92,7 +102,16 @@ export async function POST(req: Request) {
       const subscription = event.data.object as any;
       const customerId = subscription.customer as string;
       const priceId = subscription.items.data[0]?.price.id;
-      const currentPeriodEnd = parseStripeDate(subscription.current_period_end);
+      const rawCurrentPeriodEnd = subscription.current_period_end;
+      const currentPeriodEnd = parseStripeDate(rawCurrentPeriodEnd);
+
+      console.log(`[Stripe Webhook] Processing customer.subscription.updated:`, {
+        customerId,
+        subscriptionId: subscription.id,
+        priceId,
+        rawCurrentPeriodEnd,
+        parsedDate: currentPeriodEnd ? currentPeriodEnd.toISOString() : null,
+      });
 
       await db
         .update(users)
