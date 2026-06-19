@@ -74,6 +74,9 @@ export async function POST(req: Request) {
         parsedDate: currentPeriodEnd ? currentPeriodEnd.toISOString() : null,
       });
 
+      console.log(`[Stripe Webhook] Full Subscription Keys:`, Object.keys(subscription));
+      console.log(`[Stripe Webhook] Full Subscription JSON:`, JSON.stringify(subscription));
+
       // Find user by Clerk ID first (passed via checkout metadata), otherwise fallback to customer ID
       if (clerkUserId) {
         await db
