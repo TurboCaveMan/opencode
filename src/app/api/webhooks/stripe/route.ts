@@ -62,7 +62,7 @@ export async function POST(req: Request) {
       // Fetch latest subscription info from Stripe
       const subscription = await stripe.subscriptions.retrieve(subscriptionId);
       const priceId = (subscription as any).items.data[0]?.price.id;
-      const rawCurrentPeriodEnd = (subscription as any).current_period_end;
+      const rawCurrentPeriodEnd = (subscription as any).current_period_end ?? (subscription as any).items?.data?.[0]?.current_period_end;
       const currentPeriodEnd = parseStripeDate(rawCurrentPeriodEnd);
 
       console.log(`[Stripe Webhook] Processing checkout.session.completed:`, {
@@ -105,7 +105,7 @@ export async function POST(req: Request) {
       const subscription = event.data.object as any;
       const customerId = subscription.customer as string;
       const priceId = subscription.items.data[0]?.price.id;
-      const rawCurrentPeriodEnd = subscription.current_period_end;
+      const rawCurrentPeriodEnd = subscription.current_period_end ?? subscription.items?.data?.[0]?.current_period_end;
       const currentPeriodEnd = parseStripeDate(rawCurrentPeriodEnd);
 
       console.log(`[Stripe Webhook] Processing customer.subscription.updated:`, {
